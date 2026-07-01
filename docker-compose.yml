@@ -5,20 +5,21 @@ services:
     image: postgres:15-alpine
     container_name: annopow_postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      POSTGRES_DB: ${POSTGRES_DB:-annopow_bot}
+      POSTGRES_DB: ${POSTGRES_DB:-annopow_db}
+      POSTGRES_USER: ${POSTGRES_USER:-annopow_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-annopow_password}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - annopow_postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
       - annopow_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-annopow_user}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -32,13 +33,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   app:
     build: .
     container_name: annopow_bot
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-annopow_bot}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-annopow_user}:${POSTGRES_PASSWORD:-annopow_password}@postgres:5432/${POSTGRES_DB:-annopow_db}
       - REDIS_URL=redis://redis:6379/0
+      - BOT_TOKEN=${BOT_TOKEN}
+      - ADMIN_IDS=${ADMIN_IDS}
+      - ENABLE_AI=${ENABLE_AI:-false}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,6 +53,7 @@ services:
     volumes:
       - ./app:/app
       - ./logs:/app/logs
+    # ✅ FIXED: Use the correct path
     command: python -m app.main
     restart: unless-stopped
     networks:
@@ -57,6 +64,8 @@ services:
 networks:
   annopow_network:
     driver: bridge
+    name: annopow_network
 
 volumes:
-  postgres_data:
+  annopow_postgres_data:
+    name: annopow_postgres_data
