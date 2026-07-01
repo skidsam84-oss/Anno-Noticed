@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic_settings import BaseSettings
-from pydantic import Field, validator
+from pydantic import Field
 import os
 
 
@@ -38,17 +38,8 @@ class Settings(BaseSettings):
     # Languages
     DEFAULT_LANGUAGE: str = Field("en", env="DEFAULT_LANGUAGE")
     
-    # Railway specific - REMOVED RAILWAY_ENVIRONMENT
+    # Railway specific
     PORT: int = Field(8080, env="PORT")
-    
-    @validator("ADMIN_IDS", pre=True)
-    def parse_admin_ids(cls, v):
-        """Parse ADMIN_IDS from string to list."""
-        if isinstance(v, str):
-            if not v.strip():
-                return ""
-            return v
-        return v
     
     class Config:
         env_file = ".env"
