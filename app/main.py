@@ -1,8 +1,7 @@
 import asyncio
 import sys
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.filters import Command
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
@@ -35,6 +34,9 @@ async def on_startup(bot: Bot):
     """Actions on bot startup."""
     logger.info(f"Starting {BRAND_NAME} Bot...")
     
+    # Log admin IDs for debugging
+    logger.info(f"Admin IDs loaded: {settings.ADMIN_IDS}")
+    
     # Initialize database
     init_db()
     logger.info("Database initialized")
@@ -44,7 +46,8 @@ async def on_startup(bot: Bot):
     logger.info("Commands set")
     
     # Notify admins
-    for admin_id in settings.ADMIN_IDS:
+    admin_ids = settings.ADMIN_IDS if isinstance(settings.ADMIN_IDS, list) else []
+    for admin_id in admin_ids:
         try:
             await bot.send_message(
                 admin_id,
@@ -64,7 +67,8 @@ async def on_shutdown(bot: Bot):
     logger.info(f"Shutting down {BRAND_NAME} Bot...")
     
     # Notify admins
-    for admin_id in settings.ADMIN_IDS:
+    admin_ids = settings.ADMIN_IDS if isinstance(settings.ADMIN_IDS, list) else []
+    for admin_id in admin_ids:
         try:
             await bot.send_message(
                 admin_id,
