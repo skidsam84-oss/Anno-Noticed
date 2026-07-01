@@ -38,9 +38,8 @@ class Settings(BaseSettings):
     # Languages
     DEFAULT_LANGUAGE: str = Field("en", env="DEFAULT_LANGUAGE")
     
-    # Railway specific
+    # Railway specific - REMOVED RAILWAY_ENVIRONMENT
     PORT: int = Field(8080, env="PORT")
-    RAILWAY_ENVIRONMENT: bool = Field(False, env="RAILWAY_ENVIRONMENT")
     
     @validator("ADMIN_IDS", pre=True)
     def parse_admin_ids(cls, v):
