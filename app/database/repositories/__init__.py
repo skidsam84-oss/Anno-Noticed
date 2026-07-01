@@ -1,0 +1,2 @@
+from app.database.repositories.customer_repository import CustomerRepository
+from app.database.repositories.message_repository import MessageRepository
