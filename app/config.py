@@ -1,6 +1,7 @@
 from typing import List, Optional
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
+import os
 
 
 class Settings(BaseSettings):
@@ -41,6 +42,18 @@ class Settings(BaseSettings):
     PORT: int = Field(8080, env="PORT")
     RAILWAY_ENVIRONMENT: bool = Field(False, env="RAILWAY_ENVIRONMENT")
     
+    @field_validator("ADMIN_IDS", mode="before")
+    @classmethod
+    def parse_admin_ids(cls, value):
+        """Parse ADMIN_IDS from string or list."""
+        if isinstance(value, str):
+            if not value.strip():
+                return []
+            return [int(x.strip()) for x in value.split(",") if x.strip()]
+        elif isinstance(value, list):
+            return [int(x) for x in value]
+        return []
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
@@ -48,7 +61,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-# Parse ADMIN_IDS from string if needed
-if isinstance(settings.ADMIN_IDS, str):
-    settings.ADMIN_IDS = [int(x.strip()) for x in settings.ADMIN_IDS.split(',') if x.strip()]
