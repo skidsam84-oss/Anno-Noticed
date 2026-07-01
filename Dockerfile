@@ -22,5 +22,5 @@ RUN mkdir -p /app/logs
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Run the application
+# ✅ FIXED: Use the correct path to main.py
 CMD ["python", "-m", "app.main"]
