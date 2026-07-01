@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic_settings import BaseSettings
-from pydantic import Field, field_validator
+from pydantic import Field, validator
 import os
 
 
@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     # Bot Configuration
     BOT_TOKEN: str = Field(..., env="BOT_TOKEN")
     BOT_NAME: str = Field("Annopow Support Bot", env="BOT_NAME")
-    ADMIN_IDS: List[int] = Field(default_factory=list, env="ADMIN_IDS")
+    ADMIN_IDS: str = Field("", env="ADMIN_IDS")  # Store as string
     
     # Database
     DATABASE_URL: str = Field(
@@ -42,17 +42,14 @@ class Settings(BaseSettings):
     PORT: int = Field(8080, env="PORT")
     RAILWAY_ENVIRONMENT: bool = Field(False, env="RAILWAY_ENVIRONMENT")
     
-    @field_validator("ADMIN_IDS", mode="before")
-    @classmethod
-    def parse_admin_ids(cls, value):
-        """Parse ADMIN_IDS from string or list."""
-        if isinstance(value, str):
-            if not value.strip():
-                return []
-            return [int(x.strip()) for x in value.split(",") if x.strip()]
-        elif isinstance(value, list):
-            return [int(x) for x in value]
-        return []
+    @validator("ADMIN_IDS", pre=True)
+    def parse_admin_ids(cls, v):
+        """Parse ADMIN_IDS from string to list."""
+        if isinstance(v, str):
+            if not v.strip():
+                return ""
+            return v
+        return v
     
     class Config:
         env_file = ".env"
@@ -61,3 +58,17 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Parse ADMIN_IDS after settings are loaded
+def get_admin_ids():
+    """Parse ADMIN_IDS from string to list of integers."""
+    if isinstance(settings.ADMIN_IDS, str):
+        if not settings.ADMIN_IDS.strip():
+            return []
+        # Handle both comma and space separated
+        ids = settings.ADMIN_IDS.replace(" ", "").split(",")
+        return [int(x.strip()) for x in ids if x.strip()]
+    return []
+
+# Set ADMIN_IDS as list
+settings.ADMIN_IDS = get_admin_ids()
