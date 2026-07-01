@@ -1,8 +1,8 @@
 import asyncio
 import sys
-from aiogram import Bot, Dispatcher
-from aiogram.client.default import DefaultBotProperties
+from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
+from aiogram.filters import Command
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
@@ -83,11 +83,8 @@ async def on_shutdown(bot: Bot):
 
 async def main():
     """Main function."""
-    # Initialize bot
-    bot = Bot(
-        token=settings.BOT_TOKEN,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-    )
+    # Initialize bot with default settings
+    bot = Bot(token=settings.BOT_TOKEN, parse_mode=ParseMode.HTML)
     
     # Setup storage
     if settings.REDIS_URL:
