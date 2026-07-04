@@ -4,14 +4,12 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.storage.redis import RedisStorage
 from app.config import settings
 from app.constants import BRAND_NAME, BRAND_EMOJI
 from app.database.db import init_db
 from app.handlers import commands, admin_handlers, buyer_handlers
 from app.middlewares.auth import AuthMiddleware
 from app.utils.logger import setup_logger
-import redis.asyncio as redis
 
 logger = setup_logger()
 
@@ -107,18 +105,9 @@ async def main():
     # Initialize bot with default settings
     bot = Bot(token=settings.BOT_TOKEN, parse_mode=ParseMode.HTML)
     
-    # Setup storage
-    if settings.REDIS_URL:
-        try:
-            redis_client = redis.from_url(settings.REDIS_URL)
-            storage = RedisStorage(redis=redis_client)
-            logger.info("Using Redis storage")
-        except Exception as e:
-            logger.warning(f"Redis connection failed: {e}. Using Memory storage.")
-            storage = MemoryStorage()
-    else:
-        storage = MemoryStorage()
-        logger.info("Using Memory storage")
+    # ✅ Use MemoryStorage instead of Redis (simpler for Railway)
+    storage = MemoryStorage()
+    logger.info("Using Memory storage")
     
     # Initialize dispatcher
     dp = Dispatcher(storage=storage)
