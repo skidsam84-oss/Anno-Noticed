@@ -37,9 +37,21 @@ async def on_startup(bot: Bot):
     # Log admin IDs for debugging
     logger.info(f"Admin IDs loaded: {settings.ADMIN_IDS}")
     
-    # Initialize database
-    init_db()
-    logger.info("Database initialized")
+    # Print database URL for debugging (hidden password)
+    if settings.DATABASE_URL:
+        db_info = settings.DATABASE_URL.split("@")
+        if len(db_info) > 1:
+            logger.info(f"Database: Connected to {db_info[1].split('/')[0]}")
+        else:
+            logger.info("Database: Using default")
+    
+    # Initialize database (with error handling)
+    try:
+        init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        logger.warning("Bot will continue without database...")
     
     # Set commands
     await set_commands(bot)
@@ -53,7 +65,8 @@ async def on_startup(bot: Bot):
                 admin_id,
                 f"{BRAND_EMOJI} *{BRAND_NAME} Bot Started Successfully!*\n\n"
                 f"Mode: {settings.DEFAULT_MODE.upper()}\n"
-                f"AI: {'Enabled' if settings.ENABLE_AI else 'Disabled'}",
+                f"AI: {'Enabled' if settings.ENABLE_AI else 'Disabled'}\n"
+                f"Database: {'Connected' if settings.DATABASE_URL else 'Not configured'}",
                 parse_mode=ParseMode.MARKDOWN
             )
         except Exception as e:
@@ -79,8 +92,12 @@ async def on_shutdown(bot: Bot):
             logger.error(f"Failed to notify admin {admin_id}: {e}")
     
     # Close database connections
-    from app.database.db import engine
-    await engine.dispose()
+    try:
+        from app.database.db import engine
+        await engine.dispose()
+        logger.info("Database connections closed")
+    except Exception as e:
+        logger.error(f"Error closing database: {e}")
     
     logger.info(f"{BRAND_NAME} Bot shutdown complete!")
 
@@ -101,6 +118,7 @@ async def main():
             storage = MemoryStorage()
     else:
         storage = MemoryStorage()
+        logger.info("Using Memory storage")
     
     # Initialize dispatcher
     dp = Dispatcher(storage=storage)
