@@ -10,9 +10,9 @@ class Settings(BaseSettings):
     BOT_NAME: str = Field("Annopow Support Bot", env="BOT_NAME")
     ADMIN_IDS: str = Field("", env="ADMIN_IDS")  # Store as string
     
-    # Database
+    # Database - Use Railway's DATABASE_URL
     DATABASE_URL: str = Field(
-        "postgresql://postgres:password@localhost:5432/annopow_db", 
+        os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/annopow_db"),
         env="DATABASE_URL"
     )
     
@@ -62,3 +62,11 @@ def get_admin_ids():
 
 # Set ADMIN_IDS as list
 settings.ADMIN_IDS = get_admin_ids()
+
+# Log the database URL (hiding password for security)
+if settings.DATABASE_URL:
+    db_parts = settings.DATABASE_URL.split("@")
+    if len(db_parts) > 1:
+        print(f"Database: Connected to {db_parts[1].split('/')[0]}")
+    else:
+        print(f"Database URL configured (password hidden)")
