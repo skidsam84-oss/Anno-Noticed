@@ -21,26 +21,11 @@ services:
       retries: 5
     restart: unless-stopped
 
-  redis:
-    image: redis:7-alpine
-    container_name: annopow_redis
-    ports:
-      - "6379:6379"
-    networks:
-      - annopow_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
   app:
     build: .
     container_name: annopow_bot
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-annopow_user}:${POSTGRES_PASSWORD:-annopow_password}@postgres:5432/${POSTGRES_DB:-annopow_db}
-      - REDIS_URL=redis://redis:6379/0
       - BOT_TOKEN=${BOT_TOKEN}
       - ADMIN_IDS=${ADMIN_IDS}
       - ENABLE_AI=${ENABLE_AI:-false}
@@ -48,12 +33,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - ./app:/app
       - ./logs:/app/logs
-    # ✅ FIXED: Use the correct path
     command: python -m app.main
     restart: unless-stopped
     networks:
@@ -64,8 +46,6 @@ services:
 networks:
   annopow_network:
     driver: bridge
-    name: annopow_network
 
 volumes:
   annopow_postgres_data:
-    name: annopow_postgres_data
