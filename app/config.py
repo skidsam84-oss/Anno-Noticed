@@ -16,9 +16,6 @@ class Settings(BaseSettings):
         env="DATABASE_URL"
     )
     
-    # Redis
-    REDIS_URL: Optional[str] = Field(None, env="REDIS_URL")
-    
     # OpenAI
     OPENAI_API_KEY: Optional[str] = Field(None, env="OPENAI_API_KEY")
     OPENAI_MODEL: str = Field("gpt-3.5-turbo", env="OPENAI_MODEL")
@@ -62,11 +59,3 @@ def get_admin_ids():
 
 # Set ADMIN_IDS as list
 settings.ADMIN_IDS = get_admin_ids()
-
-# Log the database URL (hiding password for security)
-if settings.DATABASE_URL:
-    db_parts = settings.DATABASE_URL.split("@")
-    if len(db_parts) > 1:
-        print(f"Database: Connected to {db_parts[1].split('/')[0]}")
-    else:
-        print(f"Database URL configured (password hidden)")
