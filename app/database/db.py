@@ -11,26 +11,41 @@ logger = logging.getLogger(__name__)
 # Get database URL from settings
 database_url = settings.DATABASE_URL
 
-# For Railway, we need to ensure the URL uses the correct format
-if database_url and "postgres" in database_url:
-    # Railway provides DATABASE_URL with correct credentials
-    logger.info(f"Using database: {database_url.split('@')[1].split('/')[0] if '@' in database_url else 'configured'}")
-else:
-    logger.warning("No DATABASE_URL found, using default")
+# Log database connection info (without password)
+if database_url:
+    try:
+        # Extract host from URL for logging
+        if "@" in database_url:
+            host_part = database_url.split("@")[1].split("/")[0]
+            logger.info(f"Connecting to database at: {host_part}")
+        else:
+            logger.info("Using default database connection")
+    except Exception as e:
+        logger.warning(f"Could not parse database URL: {e}")
 
 # Create engine with Railway-specific settings
-engine = create_engine(
-    database_url,
-    pool_size=20,
-    max_overflow=40,
-    pool_timeout=60,
-    pool_recycle=3600,
-    echo=settings.DEBUG,
-    # For Railway's PostgreSQL
-    connect_args={
-        "connect_timeout": 10,
-    } if "postgres" in database_url else {}
-)
+try:
+    engine = create_engine(
+        database_url,
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_recycle=1800,
+        echo=settings.DEBUG,
+        connect_args={
+            "connect_timeout": 10,
+        }
+    )
+    logger.info("Database engine created successfully")
+except Exception as e:
+    logger.error(f"Failed to create database engine: {e}")
+    # Create engine with minimal settings as fallback
+    engine = create_engine(
+        database_url,
+        pool_size=5,
+        max_overflow=10,
+        echo=settings.DEBUG,
+    )
 
 # Create session factory
 SessionLocal = sessionmaker(
